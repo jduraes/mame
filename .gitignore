@@ -41,6 +41,8 @@
 !/*.md
 !/*.bdf
 !/LICENSE
+!/rc2014_romwbw.zsh
+!/README_RC2014.md
 /.idea
 .vscode
 docs/build
