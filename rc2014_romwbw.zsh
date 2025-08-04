@@ -101,9 +101,8 @@ MAME_CMD=(
     -bus:3 rom_ram
     -bus:4 sio
     -bus:5 cf
-    -bus:4:sio:rs232a null_modem
+    -bus:4:sio:rs232a terminal
     -harddisk roms/hd1k_combo.img
-    -bitb socket.localhost:${TCP_PORT}
     -skip_gameinfo
     -window
     -keepaspect
@@ -112,46 +111,36 @@ MAME_CMD=(
 echo "MAME command: ${MAME_CMD[*]}"
 echo ""
 
-"${MAME_CMD[@]}" &
+"${MAME_CMD[@]}" 2>&1 | tee mame.log &
 MAME_PID=$!
 
 # Wait a moment for MAME to start up
 echo -e "${YELLOW}Waiting for MAME to start...${NC}"
-sleep 5
+sleep 8
 
 # Check if MAME is still running
 if ! kill -0 $MAME_PID 2>/dev/null; then
     echo -e "${RED}Error: MAME failed to start${NC}"
+    echo -e "${YELLOW}Last few lines of MAME output:${NC}"
+    tail -10 mame.log 2>/dev/null || echo "No log file found"
     exit 1
 fi
 
-# Wait for the TCP port to be available
-echo -e "${YELLOW}Waiting for TCP port ${TCP_PORT} to be available...${NC}"
-for i in {1..10}; do
-    if nc -z localhost ${TCP_PORT} 2>/dev/null; then
-        echo -e "${GREEN}TCP port ${TCP_PORT} is ready${NC}"
-        break
-    fi
-    if [[ $i -eq 10 ]]; then
-        echo -e "${RED}Error: TCP port ${TCP_PORT} not available after 10 seconds${NC}"
-        exit 1
-    fi
-    sleep 1
-done
+# MAME should now be running with built-in terminal
+echo -e "${GREEN}MAME is running with built-in terminal${NC}"
+echo -e "${YELLOW}You can interact with RomWBW directly in the MAME window${NC}"
 
-echo ""
-echo -e "${GREEN}Starting minicom terminal emulator...${NC}"
-echo -e "${YELLOW}minicom settings: 115200 8N1, TCP connection to localhost:${TCP_PORT}${NC}"
 echo ""
 echo -e "${BLUE}Tips:${NC}"
-echo "  - RomWBW should boot automatically"  
-echo "  - Use Ctrl-A Z for minicom help"
-echo "  - Use Ctrl-A X to exit minicom"
-echo "  - The script will cleanup MAME when you exit"
+echo "  - RomWBW should boot automatically in the MAME window"
+echo "  - Use the MAME window for terminal interaction"
+echo "  - Press ESC in MAME for menu options"
+echo "  - Close MAME window or press Ctrl-C here to exit"
 echo ""
+echo -e "${GREEN}MAME is running. Waiting for exit...${NC}"
 
-# Start minicom with TCP connection
-# Use direct TCP connection with minicom
-minicom -C minicom.log -o -c on -D "tcp:localhost:${TCP_PORT}" -b 115200
+# Wait for MAME to finish
+wait $MAME_PID
+echo -e "${GREEN}MAME has exited${NC}"
 
 echo -e "\n${GREEN}Session ended${NC}"
