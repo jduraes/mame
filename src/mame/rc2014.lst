@@ -1,0 +1,26 @@
+// license:BSD-3-Clause
+//
+// rc2014.lst
+//
+// List of all enabled drivers for the rc2014 compile subtarget.
+// This mirrors the pattern used by tiny.lst/dummy.lst and restricts
+// the link step to only the RC2014-related systems.
+
+@source:homebrew/rc2014.cpp
+rc2014
+rc2014bp5
+rc2014cl2
+rc2014zed
+rc2014bp8
+sc133
+rc2014pro
+rc2014zedp
+rc2014bppro
+rc2014mini
+rc2014minicpm
+rc2014micro
+sc105
+sc112
+sc116
+sc203
+
