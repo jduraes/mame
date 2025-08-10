@@ -12,7 +12,8 @@
 function mainProject(_target, _subtarget)
 local projname
 if (_OPTIONS["SOURCES"] == nil) and (_OPTIONS["SOURCEFILTER"] == nil) then
-	if (_target == _subtarget) then
+	-- For rc2014 subtarget, keep the binary name as the target ("mame")
+	if (_target == _subtarget) or (_subtarget == "rc2014") then
 		projname = _target
 	else
 		projname = _target .. _subtarget
@@ -112,90 +113,34 @@ if (STANDALONE~=true) then
 	findfunction("linkProjects_" .. _OPTIONS["target"] .. "_" .. _OPTIONS["subtarget"])(_OPTIONS["target"], _OPTIONS["subtarget"])
 end
 if (STANDALONE~=true) then
-	links {
-		"frontend",
-	}
-end
-	links {
-		"optional",
-		"emu",
-	}
-	links {
-		"osd_" .. _OPTIONS["osd"],
-	}
-	links {
-		"qtdbg_" .. _OPTIONS["osd"],
-	}
---if (STANDALONE~=true) then
-	links {
-		"formats",
-	}
---end
-if #disasm_files > 0 then
-	links {
-		"dasm",
-	}
-end
-if (MACHINES["NETLIST"]~=null) then
-	links {
-		"netlist",
-	}
-end
-	links {
-		"utils",
-		ext_lib("expat"),
-		"softfloat",
-		"softfloat3",
-		"wdlfft",
-		"ymfm",
-		ext_lib("jpeg"),
-		"7z",
-	}
-if CPU_INCLUDE_DRC_NATIVE then
-	links {
-		"asmjit",
-	}
-end
-if (STANDALONE~=true) then
-	links {
-		ext_lib("lua"),
-		"lualibs",
-		"linenoise",
-	}
-end
-	links {
-		ext_lib("zlib"),
-		ext_lib("zstd"),
-		ext_lib("flac"),
-		ext_lib("utf8proc"),
-	}
-if (STANDALONE~=true) then
-	links {
-		ext_lib("sqlite3"),
-	}
+	-- Link core emulator always
+	links { "emu" }
 end
 
-	if _OPTIONS["NO_USE_PORTAUDIO"]~="1" then
-		links {
-			ext_lib("portaudio"),
-		}
-		if _OPTIONS["targetos"]=="windows" then
-			links {
-				"setupapi",
-			}
-		end
-	end
-	if _OPTIONS["NO_USE_MIDI"]~="1" then
-		links {
-			ext_lib("portmidi"),
-		}
-	end
-	links {
-		"bgfx",
-		"bimg",
-		"bx",
-		"ocore_" .. _OPTIONS["osd"],
-	}
+-- Link full runtime and optional device libraries for all subtargets (including rc2014)
+links {
+	"osd_" .. _OPTIONS["osd"],
+}
+links { "qtdbg_" .. _OPTIONS["osd"] }
+links { "frontend" }
+links { "formats" }
+-- netlist if needed
+if (MACHINES["NETLIST"]~=null) then links { "netlist" } end
+links { "utils", ext_lib("expat"), "softfloat", "softfloat3", "wdlfft", "ymfm", ext_lib("jpeg"), "7z" }
+if CPU_INCLUDE_DRC_NATIVE then links { "asmjit" } end
+links { ext_lib("lua"), "lualibs", "linenoise" }
+links { ext_lib("zlib"), ext_lib("zstd"), ext_lib("flac"), ext_lib("utf8proc") }
+links { ext_lib("sqlite3") }
+-- optional device libraries are required for many subtargets
+links { "optional" }
+-- disassemblers must come AFTER optional due to static archive resolution order
+if #disasm_files > 0 then links { "dasm" } end
+-- graphics stack and audio/midi backends
+links { "bgfx", "bimg", "bx" }
+links { ext_lib("portaudio") }
+if _OPTIONS["targetos"]=="windows" then links { "setupapi" } end
+links { ext_lib("portmidi") }
+links { "ocore_" .. _OPTIONS["osd"] }
 
 	override_resources = false;
 
